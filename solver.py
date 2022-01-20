@@ -3,6 +3,7 @@ import string
 import copy
 
 def processNewInfo(guessable_map,new_guess,secret):
+    """Populate the board with a new guess."""
     # could/should make this just read from the file since nothing else needs to
     # secrets_set = "./secret.txt"
     new_board_state = copy.deepcopy(guessable_map)
@@ -31,13 +32,39 @@ def processNewInfo(guessable_map,new_guess,secret):
             letter_counts[letter] = letter_counts.get(letter,0)-1            
     return new_board_state
 
-def findBestGuess(poss_guesses):
-    guess_word = ""
-    for guess in guess_word:
-        pass
-    return guess_word
+def rateGuessLetter(occurrences, space_size):
+    """Rate a letter based on how close it comes to dividing the space in 2."""
+    raw_fraction = occurrences/space_size
+    return abs(0.5-raw_fraction)
+
+def findCommonLetters(guess_words):
+    """Count number of times letters occur in given guess words."""
+    letter_occurrences = dict.fromkeys(list(string.ascii_lowercase))
+    for word in guess_words:
+        letters_used = ""
+        for letter in word:
+            if letter not in letters_used:
+                letter_occurrences[letter] = letter_occurrences.get(letter,0) + 1
+                letters_used.append(letter)
+    return letter_occurrences
+
+def findBestGuess(poss_guess_words):
+    """Given a list of possible guesses, choose the one that if chosen maximizes eliminations."""
+    letter_occurrences = findCommonLetters(poss_guess_words)
+    word_ratings = dict.fromkeys(poss_guess_words)
+    guess_space_size = len(poss_guess_words)
+    for guess_word in poss_guess_words:
+        letters_used = ""
+        for letter in guess_word:
+            if letter not in letters_used:
+                word_ratings[guess_word] = word_ratings[guess_word] + \
+                    rateGuessLetter(letter_occurrences[letter],guess_space_size)
+    # for potential_best_word, word_rating in word_ratings.items():
+    best_guess_word = max(word_ratings, key=word_ratings.get)
+    return best_guess_word
 
 def trimPossGuesses(board_state, curr_guess_set):
+    """Given a board, exclude the guesses that can no longer be the secret."""
     if len(board_state == 0):
         return curr_guess_set
     new_guess_set = copy.deepcopy(curr_guess_set)
@@ -50,6 +77,7 @@ def trimPossGuesses(board_state, curr_guess_set):
     return new_guess_set
 
 def executeTurn(board_state, poss_guesses, secret):
+    """Make a guess and populate the board with it."""
     new_poss_guesses = trimPossGuesses(board_state, poss_guesses)
     best_guess = findBestGuess(new_poss_guesses)
     print("guessed",best_guess)
@@ -59,16 +87,14 @@ def executeTurn(board_state, poss_guesses, secret):
     return False, new_board_state, new_poss_guesses
 
 def solveGivenSecret(given_secret):
-    # this is a set
-    secrets_set = "./secret.txt"
-    f = open("demofile.txt", "r")
+    """Auto-solve through all turns for a given secret."""
+    f = open("secret.txt", "r")
     secrets_set = set(f.readlines())
     if given_secret not in secrets_set:
         print("That isn't a possible secret")
-    # this is a set
-    guesses = "./guess.txt"
+    f = open("guess.txt", "r")
+    guesses = set(f.readlines())
     state = dict.fromkeys(list(string.ascii_lowercase))
-    # state = dict()
     turns_taken = 0
     while True:
         turns_taken += 1
@@ -86,33 +112,3 @@ if __name__ == "__main__":
     # # not related to solver
     # mytest = {'black':dict.fromkeys(list(string.ascii_lowercase))}
     # # end not related to solver
-
-{'a': {'Grey'}, 'b': None, 'c': None, 'd': None, 'e': None, 'f': None, 'g': None, 'h': None, 'i': None, 'j': None, 'k': None, 'l': None, 'm': None, 'n': None, 'o': None, 'p': None, 'q': None, 'r': None, 's': None, 't': None, 'u': None, 'v': None, 'w': None, 'x': None, 'y': None, 'z': None}
-
-
-letters
-positions
-colors
-dynamic dict of letters with a list of positions mapping to colors
-
-dict of positions with a dict of colors
-dict of colors with dict of letters mapping to positions
-^if letter in colors['black']
-
-but most efficient is dict of letters to set of positions they can be in
-{'a': {'0','1','2'}, 'b': None, 'c': None, 'd': None, 'e': None, 'f': None, 'g': None, 'h': None, 'i': None, 'j': None, 'k': None, 'l': None, 'm': None, 'n': None, 'o': None, 'p': None, 'q': None, 'r': None, 's': None, 't': None, 'u': None, 'v': None, 'w': None, 'x': None, 'y': None, 'z': None}
-
-
-
-old     {0,1,2,3,4}
-new     1
-result  {0,2,3,4}
-
-old     {0,1,2,4}
-new     1
-result  {0,2,4}
-
-old     {}
-new     1
-result  error
-
