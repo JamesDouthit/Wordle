@@ -45,9 +45,9 @@ def processNewInfo(guessable_map,new_guess,secret):
 def rateGuessLetter(occurrences, space_size):
     """Rate a letter based on how close it comes to dividing the space in 2."""
     raw_fraction = occurrences/space_size
-    return abs(0.5-raw_fraction)
+    return 1-((0.5-raw_fraction)*(0.5-raw_fraction))
 
-def findCommonLetters(guess_words):
+def findLettersOccurrences(guess_words):
     """Count number of times letters occur in given guess words."""
     letter_occurrences = dict()
     for word in guess_words:
@@ -60,16 +60,27 @@ def findCommonLetters(guess_words):
 
 def findBestGuess(poss_guess_words):
     """Given a list of possible guesses, choose the one that if chosen maximizes eliminations."""
-    letter_occurrences = findCommonLetters(poss_guess_words)
+    letter_occurrences = findLettersOccurrences(poss_guess_words)
     word_ratings = dict()
     guess_space_size = len(poss_guess_words)
     for guess_word in poss_guess_words:
         letters_used = ""
+        # 
+        # letter_ratings = []
+        # letter_prevs = []
+        # 
         for letter in guess_word:
             if letter not in letters_used:
                 word_ratings[guess_word] = word_ratings.get(guess_word,float(0)) + \
                     rateGuessLetter(letter_occurrences[letter],guess_space_size)
+                # 
+                # letter_ratings.append(rateGuessLetter(letter_occurrences[letter],guess_space_size))
+                # letter_prevs.append(letter_occurrences[letter])
+                # 
                 letters_used += letter
+        # print("in findBestGuess, word",guess_word,"rated",word_ratings[guess_word])
+        # print("from letters",list(guess_word),"rated",letter_ratings)
+        # print("due to prevalences",letter_prevs)
     best_guess_word = max(word_ratings, key=word_ratings.get)
     return best_guess_word
 
@@ -108,7 +119,6 @@ def solveGivenSecret(given_secret, verbose):
     verbosePrint = print if verbose else lambda *args, **kwargs: None
     f = open("secret.txt", "r")
     secrets_set = set(f.read().splitlines())
-    print("len secrets_set:",len(secrets_set))
     if given_secret not in secrets_set:
         print("That isn't a possible secret")
     f = open("guess.txt", "r")
