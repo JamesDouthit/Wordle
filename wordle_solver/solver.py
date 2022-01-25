@@ -3,6 +3,7 @@ import string
 import copy
 import time
 import statistics
+import wordle_solver
 
 """
 rating func 1-(x^2)
@@ -86,6 +87,7 @@ def processNewGuess(guessable_map, true_letter_counts, new_guess, secret):
             new_board_state[letter].discard(str(letter_pos))
             # account for the letter
             guess_letter_count_left[letter] = guess_letter_count_left.get(letter,0)-1
+            new_true_letter_counts[letter] = determineTrueLetterCount(new_true_letter_counts[letter])
         # letter in secret but already accounted for
         elif guess_letter_count_left.get(letter,99)<=0:
             # now true number of this letter in the word is known
